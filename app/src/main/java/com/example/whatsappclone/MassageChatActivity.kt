@@ -44,6 +44,10 @@ class MassageChatActivity : AppCompatActivity() {
         apiService = Client.Client.getClient("https://fcm.googleapis.com/")!!
             .create(ApiService::class.java)
 
+
+        intent = intent
+        userIdVisit = intent.getStringExtra("visit_id")
+
         val toolbar = findViewById<Toolbar>(R.id.toolbar_massage_chat)
         setSupportActionBar(toolbar)
         supportActionBar!!.title = ""
@@ -51,9 +55,16 @@ class MassageChatActivity : AppCompatActivity() {
         toolbar.setNavigationOnClickListener {
             finish()
         }
-
-        intent = intent
-        userIdVisit = intent.getStringExtra("visit_id")
+        profile_image_massage_chat.setOnClickListener {
+            val intent = Intent(this, VisitUserProfileActivity::class.java)
+            intent.putExtra("visit_id", userIdVisit)
+            startActivity(intent)
+        }
+        username_massage_chat.setOnClickListener {
+            val intent = Intent(this, VisitUserProfileActivity::class.java)
+            intent.putExtra("visit_id", userIdVisit)
+            startActivity(intent)
+        }
 
         firebaseUser = FirebaseAuth.getInstance().currentUser
 

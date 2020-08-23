@@ -53,7 +53,12 @@ class ChatsAdapter(val mContext: Context, val mChatList: List<Chat>, val imageUr
     override fun onBindViewHolder(holder: ChatsViewHolder, position: Int) {
         val chat: Chat = mChatList[position]
 
-        Picasso.get().load(imageUrl).into(holder.profileImage)
+        if(imageUrl == ""){
+            Picasso.get().load(R.drawable.ic_profile).into(holder.profileImage)
+        }
+        else {
+            Picasso.get().load(imageUrl).into(holder.profileImage)
+        }
 
         //image massage
         if (chat.massage == "sent you an image" && chat.url != "") {

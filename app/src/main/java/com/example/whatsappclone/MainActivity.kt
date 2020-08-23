@@ -21,7 +21,9 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
+import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_setting.view.*
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -64,10 +66,12 @@ class MainActivity : AppCompatActivity() {
                 if (snapshot.exists()) {
                     val user: Users? = snapshot.getValue(Users::class.java)
                     username.text = user!!.username
-//                    Picasso.get().load(user.profile)
-//                        .placeholder(R.drawable.ic_profile)
-//                        .error(R.drawable.ic_profile)
-//                        .into(profile_image)
+                    if(user.profile == ""){
+                        Picasso.get().load(R.drawable.ic_profile).into(profile_image)
+                    }
+                    else {
+                        Picasso.get().load(user.profile).into(profile_image)
+                    }
                 }
             }
 

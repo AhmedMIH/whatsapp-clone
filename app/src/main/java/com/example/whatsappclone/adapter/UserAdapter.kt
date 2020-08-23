@@ -19,6 +19,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.squareup.picasso.Picasso
 import de.hdodenhof.circleimageview.CircleImageView
 
 class UserAdapter(val context: Context, val mUsers: List<Users>, val isChat: Boolean) :
@@ -37,8 +38,12 @@ class UserAdapter(val context: Context, val mUsers: List<Users>, val isChat: Boo
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
         val user: Users = mUsers[position]
         holder.username.text = user.username
-//        Picasso.get().load(user.profile).placeholder(R.drawable.ic_profile)
-//            .into(holder.profileImageView)
+        if(user.profile == ""){
+            Picasso.get().load(R.drawable.ic_profile).into(holder.profileImageView)
+        }
+        else {
+            Picasso.get().load(user.profile).placeholder(R.drawable.ic_profile)
+        }
 
         if (isChat) {
             retrieveLastMassage(user.uid, holder.lastMassage)

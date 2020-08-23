@@ -3,6 +3,7 @@ package com.example.whatsappclone
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.whatsappclone.modelClass.Users
 import com.google.firebase.database.DataSnapshot
@@ -36,19 +37,35 @@ class VisitUserProfileActivity : AppCompatActivity() {
             }
         })
         show_facebook_visit_profile.setOnClickListener {
-            val uri = Uri.parse(user!!.facebook)
-            val intent = Intent(Intent.ACTION_VIEW,uri)
-            startActivity(intent)
+            if (user!!.facebook != "") {
+                val uri = Uri.parse(user!!.facebook)
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "this user didn't set a facebook username", Toast.LENGTH_SHORT)
+                    .show()
+            }
+
         }
         show_instagram_visit_profile.setOnClickListener {
-            val uri = Uri.parse(user!!.instagram)
-            val intent = Intent(Intent.ACTION_VIEW,uri)
-            startActivity(intent)
+            if (user!!.instagram != "") {
+                val uri = Uri.parse(user!!.instagram)
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "this user didn't set a instagram username", Toast.LENGTH_SHORT)
+                    .show()
+            }
         }
         show_website_visit_profile.setOnClickListener {
-            val uri = Uri.parse(user!!.website)
-            val intent = Intent(Intent.ACTION_VIEW,uri)
-            startActivity(intent)
+            if (user!!.website != "") {
+                val uri = Uri.parse(user!!.website)
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "this user didn't set a website ", Toast.LENGTH_SHORT)
+                    .show()
+            }
         }
         send_massage_btn_visit_profile.setOnClickListener {
             val intent = Intent(this, MassageChatActivity::class.java)

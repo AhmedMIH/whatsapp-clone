@@ -95,4 +95,9 @@ class ChatFragment : Fragment() {
 
         })
     }
+
+    override fun onResume() {
+        super.onResume()
+        retrieveChatList()
+    }
 }
