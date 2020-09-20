@@ -17,7 +17,7 @@ import com.google.firebase.messaging.RemoteMessage
 class MyFirebaseMessaging : FirebaseMessagingService() {
     override fun onMessageReceived(mRemoteMessage: RemoteMessage) {
         super.onMessageReceived(mRemoteMessage)
-        val send = mRemoteMessage.data["send"]
+        val send = mRemoteMessage.data["sented"]
         val user = mRemoteMessage.data["user"]
         val sharedPref = getSharedPreferences("PREFS", Context.MODE_PRIVATE)
         val currentOnlineUser = sharedPref.getString("currentUser", "none")

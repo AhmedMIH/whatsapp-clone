@@ -41,7 +41,7 @@ class MassageChatActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_massage_chat)
-        apiService = Client.Client.getClient("https://fcm.googleapis.com/")!!
+        apiService = Client.getClient("https://fcm.googleapis.com/")!!
             .create(ApiService::class.java)
 
 
@@ -198,7 +198,7 @@ class MassageChatActivity : AppCompatActivity() {
                                 response: Response<MyResponse>
                             ) {
                                 if (response.code() == 200) {
-                                    if (response.body()!!.success !== 1) {
+                                    if (response.body()!!.success != 1) {
                                         Toast.makeText(
                                             this@MassageChatActivity,
                                             "failed nothing happen.",
