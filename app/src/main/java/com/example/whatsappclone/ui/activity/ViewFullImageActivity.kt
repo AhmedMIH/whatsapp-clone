@@ -1,8 +1,9 @@
-package com.example.whatsappclone
+package com.example.whatsappclone.ui.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ImageView
+import com.example.whatsappclone.R
 import com.squareup.picasso.Picasso
 
 class ViewFullImageActivity : AppCompatActivity() {

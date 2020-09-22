@@ -1,4 +1,4 @@
-package com.example.whatsappclone.ui
+package com.example.whatsappclone.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.ViewModelProvider
 import com.example.whatsappclone.R
-import com.example.whatsappclone.WelcomeActivity
+import com.example.whatsappclone.ui.AuthListener
 import com.example.whatsappclone.ui.viewModel.AuthViewModel
 import com.example.whatsappclone.ui.viewModel.AuthViewModelFactory
 import com.example.whatsappclone.util.startMainActivity

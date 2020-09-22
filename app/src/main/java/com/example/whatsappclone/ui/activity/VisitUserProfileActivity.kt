@@ -1,10 +1,11 @@
-package com.example.whatsappclone
+package com.example.whatsappclone.ui.activity
 
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.whatsappclone.R
 import com.example.whatsappclone.data.model.Users
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError

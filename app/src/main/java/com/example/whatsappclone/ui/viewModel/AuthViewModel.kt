@@ -1,10 +1,13 @@
-package com.example.whatsappclone.ui
+package com.example.whatsappclone.ui.viewModel
 
 import android.content.Intent
 import android.util.Log
 import android.view.View
 import androidx.lifecycle.ViewModel
 import com.example.whatsappclone.data.repositories.UserRepository
+import com.example.whatsappclone.ui.AuthListener
+import com.example.whatsappclone.ui.activity.LoginActivity
+import com.example.whatsappclone.ui.activity.RegisterActivity
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -19,7 +22,6 @@ class AuthViewModel(private val repository: UserRepository) : ViewModel() {
     val user by lazy {
         repository.currentUser()
     }
-
 
     fun login() {
         if (email.isNullOrEmpty() || password.isNullOrEmpty()) {
@@ -80,8 +82,6 @@ class AuthViewModel(private val repository: UserRepository) : ViewModel() {
             })
         disposables.add(disposable)
     }
-
-
 
     override fun onCleared() {
         super.onCleared()

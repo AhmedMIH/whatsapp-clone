@@ -1,4 +1,4 @@
-package com.example.whatsappclone
+package com.example.whatsappclone.ui.activity
 
 import android.os.Bundle
 import android.util.Log
@@ -13,6 +13,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.example.whatsappclone.R
 import com.example.whatsappclone.ui.fragments.ChatFragment
 import com.example.whatsappclone.ui.fragments.SearchFragment
 import com.example.whatsappclone.ui.fragments.SettingFragment

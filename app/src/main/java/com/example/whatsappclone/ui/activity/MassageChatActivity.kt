@@ -1,4 +1,4 @@
-package com.example.whatsappclone
+package com.example.whatsappclone.ui.activity
 
 import android.app.Activity
 import android.app.ProgressDialog
@@ -8,13 +8,19 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.whatsappclone.R
 import com.example.whatsappclone.adapter.ChatsAdapter
-import com.example.whatsappclone.ui.fragments.ApiService
 import com.example.whatsappclone.data.model.Chat
 import com.example.whatsappclone.data.model.Users
 import com.example.whatsappclone.notifications.*
+import com.example.whatsappclone.ui.AuthListener
+import com.example.whatsappclone.ui.ClickListener
+import com.example.whatsappclone.ui.fragments.ApiService
+import com.example.whatsappclone.ui.viewModel.ChatViewModel
+import com.example.whatsappclone.ui.viewModel.ChatViewModelFactory
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
@@ -24,11 +30,14 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.UploadTask
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_massage_chat.*
+import org.kodein.di.KodeinAware
+import org.kodein.di.android.kodein
+import org.kodein.di.generic.instance
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class MassageChatActivity : AppCompatActivity() {
+class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
     var userIdVisit: String? = ""
     var firebaseUser: FirebaseUser? = null
     var chatsAdapter: ChatsAdapter? = null
@@ -38,12 +47,26 @@ class MassageChatActivity : AppCompatActivity() {
     var notify = false
     var apiService: ApiService? = null
 
+
+    override val kodein by kodein()
+    private val factory: ChatViewModelFactory by instance()
+    private lateinit var viewModel: ChatViewModel
+
+    val listener = object : ClickListener {
+        override fun deleteMassage(massage: Chat) {
+            viewModel.massage = massage
+            viewModel.deleteMassage()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_massage_chat)
         apiService = Client.getClient("https://fcm.googleapis.com/")!!
             .create(ApiService::class.java)
 
+        viewModel = ViewModelProvider(this,factory)[ChatViewModel::class.java]
+        viewModel.authListener = this
 
         intent = intent
         userIdVisit = intent.getStringExtra("visit_id")
@@ -180,10 +203,10 @@ class MassageChatActivity : AppCompatActivity() {
                     val token = snapshot.getValue(Token::class.java)
                     val data =
                         Data(
-                            firebaseUser!!.uid
-                            , R.mipmap.ic_launcher
-                            , "$username : $massage"
-                            , "new massage",
+                            firebaseUser!!.uid,
+                            R.mipmap.ic_launcher,
+                            "$username : $massage",
+                            "new massage",
                             userIdVisit
                         )
                     val sender = Sender(data, token!!.token.toString())
@@ -301,7 +324,8 @@ class MassageChatActivity : AppCompatActivity() {
                     }
                     chatsAdapter = ChatsAdapter(
                         this@MassageChatActivity,
-                        mChatList as ArrayList<Chat>, receiverImageUrl!!
+                        mChatList as ArrayList<Chat>, receiverImageUrl!!,
+                        listener
                     )
                     recyclerView.adapter = chatsAdapter
                 }
@@ -338,5 +362,17 @@ class MassageChatActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         reference!!.removeEventListener(seenListener!!)
+    }
+
+    override fun onStarted() {
+        Toast.makeText(this,"Loading",Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onSuccess() {
+        Toast.makeText(this,"delete massage successfully",Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onFailure(message: String) {
+        Toast.makeText(this,"error $message",Toast.LENGTH_SHORT).show()
     }
 }

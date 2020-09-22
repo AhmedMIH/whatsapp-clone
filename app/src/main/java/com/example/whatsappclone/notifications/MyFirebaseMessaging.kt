@@ -9,7 +9,7 @@ import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
 import androidx.core.app.NotificationCompat
-import com.example.whatsappclone.MassageChatActivity
+import com.example.whatsappclone.ui.activity.MassageChatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage

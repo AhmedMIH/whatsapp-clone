@@ -1,4 +1,4 @@
-package com.example.whatsappclone.fragments
+package com.example.whatsappclone.ui.fragments
 
 import android.os.Bundle
 import android.text.Editable

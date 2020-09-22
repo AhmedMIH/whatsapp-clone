@@ -1,4 +1,4 @@
-package com.example.whatsappclone.fragments
+package com.example.whatsappclone.ui.fragments
 
 import android.app.Activity
 import android.app.AlertDialog

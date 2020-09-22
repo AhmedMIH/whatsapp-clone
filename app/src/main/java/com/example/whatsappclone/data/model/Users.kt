@@ -1,4 +1,4 @@
-package com.example.whatsappclone.modelClass
+package com.example.whatsappclone.data.model
 
 data class Users(
     var uid: String? = "",

@@ -1,4 +1,4 @@
-package com.example.whatsappclone.ui
+package com.example.whatsappclone.ui.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

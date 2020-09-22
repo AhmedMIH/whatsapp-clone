@@ -1,4 +1,4 @@
-package com.example.whatsappclone.ui
+package com.example.whatsappclone.ui.viewModel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -39,8 +39,6 @@ class HomeViewModel(
 
     override fun onCleared() {
         super.onCleared()
-//        state = ""
-//        updateState()
         disposables.dispose()
     }
 

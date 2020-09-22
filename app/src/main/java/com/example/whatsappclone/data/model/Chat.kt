@@ -1,4 +1,4 @@
-package com.example.whatsappclone.modelClass
+package com.example.whatsappclone.data.model
 
 data class Chat(
     var sender: String? = "",

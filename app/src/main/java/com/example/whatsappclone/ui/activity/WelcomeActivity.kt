@@ -1,10 +1,9 @@
-package com.example.whatsappclone
+package com.example.whatsappclone.ui.activity
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.example.whatsappclone.ui.LoginActivity
-import com.example.whatsappclone.ui.RegisterActivity
+import com.example.whatsappclone.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.android.synthetic.main.activity_welcome.*
@@ -31,7 +30,7 @@ class WelcomeActivity : AppCompatActivity() {
         firebaseUser =  FirebaseAuth.getInstance().currentUser
 
         if (firebaseUser != null){
-            val intent = Intent(this,MainActivity::class.java)
+            val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             finish()
         }

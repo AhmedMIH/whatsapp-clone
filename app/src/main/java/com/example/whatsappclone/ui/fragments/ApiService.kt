@@ -1,4 +1,4 @@
-package com.example.whatsappclone.fragments
+package com.example.whatsappclone.ui.fragments
 
 import com.example.whatsappclone.notifications.MyResponse
 import com.example.whatsappclone.notifications.Sender
