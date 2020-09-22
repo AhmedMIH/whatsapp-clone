@@ -3,19 +3,17 @@ package com.example.whatsappclone.fragments
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.ProgressDialog
-import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import com.example.whatsappclone.R
-import com.example.whatsappclone.modelClass.Users
+import com.example.whatsappclone.data.model.Users
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
@@ -25,18 +23,18 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
 import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.fragment_setting.*
 import kotlinx.android.synthetic.main.fragment_setting.view.*
 
 class SettingFragment : Fragment() {
 
-    var userRef: DatabaseReference? = null
-    var firebaseUser: FirebaseUser? = null
+    private var userRef: DatabaseReference? = null
+    private var firebaseUser: FirebaseUser? = null
     private val reqCode = 483
     private var imageUri: Uri? = null
     private var storageRef: StorageReference? = null
     private var coverChecker: String? = ""
     private var socialChecker: String? = ""
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,34 +47,7 @@ class SettingFragment : Fragment() {
         userRef = FirebaseDatabase.getInstance().reference.child("Users").child(firebaseUser!!.uid)
         storageRef = FirebaseStorage.getInstance().reference.child("User Images")
 
-        userRef!!.addValueEventListener(object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-
-            }
-
-            override fun onDataChange(p0: DataSnapshot) {
-                if (p0.exists()) {
-                    val user: Users? = p0.getValue(Users::class.java)
-                    if (context != null) {
-                        if(user!!.profile == ""){
-                            Picasso.get().load(R.drawable.ic_profile).into(view.profile_image_setting)
-                        }
-                        else {
-                            Picasso.get().load(user.profile).into(view.profile_image_setting)
-                        }
-                        if(user.cover == ""){
-                            Picasso.get().load(R.drawable.ic_profile).into(view.cover_image_setting)
-                        }
-                        else {
-                            Picasso.get().load(user.cover).into(view.cover_image_setting)
-                        }
-                        view.username_setting.text = user.username
-                    }
-
-                }
-            }
-
-        })
+        loadImageFromDb()
 
         view.profile_image_setting.setOnClickListener {
             pickImage()
@@ -102,8 +73,38 @@ class SettingFragment : Fragment() {
             setSocialLinks()
         }
 
-
         return view
+    }
+
+    private fun loadImageFromDb() {
+
+        userRef!!.addValueEventListener(object : ValueEventListener {
+            override fun onCancelled(error: DatabaseError) {}
+
+            override fun onDataChange(p0: DataSnapshot) {
+                if (p0.exists()) {
+                    val user: Users? = p0.getValue(Users::class.java)
+                    showUserInformation(user?.profile, user?.cover, user?.username)
+                }
+            }
+        })
+    }
+
+    private fun showUserInformation(profile: String?, cover: String?, username: String?) {
+        if (context != null) {
+            if (profile == "") {
+                Picasso.get().load(R.drawable.ic_profile).into(profile_image_setting)
+            } else {
+                Picasso.get().load(profile).into(profile_image_setting)
+            }
+            if (cover == "") {
+                Picasso.get().load(R.drawable.ic_profile).into(cover_image_setting)
+            } else {
+                Picasso.get().load(cover).into(cover_image_setting)
+            }
+            username_setting.text = username
+        }
+
     }
 
     private fun pickImage() {
@@ -129,7 +130,6 @@ class SettingFragment : Fragment() {
         if (imageUri != null) {
             val fileRef = storageRef!!.child(System.currentTimeMillis().toString() + ".jpg")
             val uploadTask = fileRef.putFile(imageUri!!)
-
             uploadTask.continueWithTask(Continuation<UploadTask.TaskSnapshot, Task<Uri>> { task ->
                 if (!task.isSuccessful) {
                     task.exception?.let {
@@ -142,21 +142,21 @@ class SettingFragment : Fragment() {
                     val downloadUrl = task.result
                     val url = downloadUrl.toString()
                     if (coverChecker == "cover") {
-                        val mapCoverImage = HashMap<String, Any>()
-                        mapCoverImage["cover"] = url
-                        userRef!!.updateChildren(mapCoverImage)
-                        coverChecker = ""
+                        updateDbChildren("cover", url)
                     } else {
-                        val mapProfileImage = HashMap<String, Any>()
-                        mapProfileImage["profile"] = url
-                        userRef!!.updateChildren(mapProfileImage)
-                        coverChecker = ""
+                        updateDbChildren("profile", url)
                     }
                     progressBar.dismiss()
                 }
             }
         }
+    }
 
+    private fun updateDbChildren(type: String, url: String) {
+        val mapCoverImage = HashMap<String, Any>()
+        mapCoverImage[type] = url
+        userRef!!.updateChildren(mapCoverImage)
+        coverChecker = ""
     }
 
     private fun setSocialLinks() {
@@ -176,21 +176,21 @@ class SettingFragment : Fragment() {
             editText.hint = "e.g ahmed21"
         }
         builder.setView(editText)
-        builder.setPositiveButton("Create") { dialog, which ->
+        builder.setPositiveButton("Create") { _, _ ->
             val str = editText.text.toString()
             if (str == "") {
                 Toast.makeText(context, "please write something.....", Toast.LENGTH_LONG).show()
             } else {
-                saveSocialLink(str)
+                saveSocialLinkToDb(str)
             }
         }
-        builder.setNegativeButton("Cancel") { dialog, which ->
+        builder.setNegativeButton("Cancel") { dialog, _ ->
             dialog.cancel()
         }
         builder.show()
     }
 
-    private fun saveSocialLink(str: String) {
+    private fun saveSocialLinkToDb(str: String) {
         val mapSocialUrl = HashMap<String, Any>()
 
         when (socialChecker) {
@@ -205,8 +205,8 @@ class SettingFragment : Fragment() {
             }
         }
         userRef!!.updateChildren(mapSocialUrl).addOnCompleteListener {
-            if(it.isSuccessful){
-                Toast.makeText(context,"updated successfully",Toast.LENGTH_SHORT).show()
+            if (it.isSuccessful) {
+                Toast.makeText(context, "updated successfully", Toast.LENGTH_SHORT).show()
             }
         }
     }
