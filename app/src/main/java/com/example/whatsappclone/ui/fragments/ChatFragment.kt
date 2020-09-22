@@ -9,8 +9,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.whatsappclone.R
 import com.example.whatsappclone.adapter.UserAdapter
-import com.example.whatsappclone.modelClass.ChatList
-import com.example.whatsappclone.modelClass.Users
+import com.example.whatsappclone.data.model.ChatList
+import com.example.whatsappclone.data.model.Users
 import com.example.whatsappclone.notifications.Token
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -25,7 +25,7 @@ class ChatFragment : Fragment() {
     var mUsers: List<Users>? = null
     var userChatList: List<ChatList>? = null
     lateinit var recyclerViewChatList: RecyclerView
-    var firebaseUser: FirebaseUser? = null
+    private var firebaseUser: FirebaseUser? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,11 +37,15 @@ class ChatFragment : Fragment() {
         recyclerViewChatList = view.findViewById(R.id.recycler_view_chatList)
         recyclerViewChatList.setHasFixedSize(true)
         recyclerViewChatList.layoutManager = LinearLayoutManager(context)
-
         firebaseUser = FirebaseAuth.getInstance().currentUser
-
         userChatList = ArrayList()
 
+        addUserToTheList()
+        updateToken()
+
+        return view
+    }
+    private fun addUserToTheList(){
         val ref = FirebaseDatabase.getInstance().reference.child("ChatList")
             .child(firebaseUser!!.uid)
         ref.addValueEventListener(object : ValueEventListener {
@@ -59,18 +63,17 @@ class ChatFragment : Fragment() {
             }
 
         })
-        updateToken(FirebaseInstanceId.getInstance().token)
 
-        return view
     }
 
-    private fun updateToken(token: String?) {
+    private fun updateToken() {
+        val token = FirebaseInstanceId.getInstance().token
         val ref = FirebaseDatabase.getInstance().reference.child("Tokens")
         val token1 = Token(token)
         ref.child(firebaseUser!!.uid).setValue(token1)
     }
 
-    fun retrieveChatList() {
+    private fun retrieveChatList() {
         mUsers = ArrayList()
         val ref = FirebaseDatabase.getInstance().reference.child("Users")
         ref.addValueEventListener(object : ValueEventListener {
@@ -91,8 +94,6 @@ class ChatFragment : Fragment() {
                 userAdapter = UserAdapter(context!!, (mUsers as ArrayList<Users>), true)
                 recyclerViewChatList.adapter = userAdapter
             }
-
-
         })
     }
 

@@ -3,7 +3,6 @@ package com.example.whatsappclone.fragments
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -13,7 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.whatsappclone.R
 import com.example.whatsappclone.adapter.UserAdapter
-import com.example.whatsappclone.modelClass.Users
+import com.example.whatsappclone.data.model.Users
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -31,7 +30,7 @@ class SearchFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_search, container, false)
-        val search = view.findViewById<EditText>(R.id.search_user)
+        val searchEditText = view.findViewById<EditText>(R.id.search_user)
 
         recyclerView = view.findViewById(R.id.search_list)
         recyclerView!!.setHasFixedSize(true)
@@ -40,7 +39,7 @@ class SearchFragment : Fragment() {
         mUsers = ArrayList()
         retrieveAllUser()
 
-        search.addTextChangedListener(object : TextWatcher{
+        searchEditText.addTextChangedListener(object : TextWatcher{
             override fun afterTextChanged(p0: Editable?) {
             }
 
@@ -63,9 +62,7 @@ class SearchFragment : Fragment() {
             .child("Users")
 
         refUser.addValueEventListener(object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-
-            }
+            override fun onCancelled(error: DatabaseError) {}
 
             override fun onDataChange(p0: DataSnapshot) {
                 (mUsers as ArrayList<Users>).clear()
@@ -79,11 +76,8 @@ class SearchFragment : Fragment() {
                     userAdapter = UserAdapter(context!!, mUsers!!, false)
                     recyclerView!!.adapter = userAdapter
                 }
-
             }
-
         })
-
     }
 
     fun searchForUsers(str: String) {
@@ -94,9 +88,7 @@ class SearchFragment : Fragment() {
             .startAt(str)
             .endAt(str+"\uf8ff")
         queryUser.addValueEventListener(object : ValueEventListener{
-            override fun onCancelled(error: DatabaseError) {
-
-            }
+            override fun onCancelled(error: DatabaseError) {}
 
             override fun onDataChange(p0: DataSnapshot) {
                 (mUsers as ArrayList<Users>).clear()
@@ -109,7 +101,6 @@ class SearchFragment : Fragment() {
                 userAdapter = UserAdapter(context!!, mUsers!!, false)
                 recyclerView!!.adapter = userAdapter
             }
-
         })
     }
 }

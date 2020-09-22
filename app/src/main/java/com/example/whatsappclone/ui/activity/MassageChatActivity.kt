@@ -11,9 +11,9 @@ import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.whatsappclone.adapter.ChatsAdapter
-import com.example.whatsappclone.fragments.ApiService
-import com.example.whatsappclone.modelClass.Chat
-import com.example.whatsappclone.modelClass.Users
+import com.example.whatsappclone.ui.fragments.ApiService
+import com.example.whatsappclone.data.model.Chat
+import com.example.whatsappclone.data.model.Users
 import com.example.whatsappclone.notifications.*
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
