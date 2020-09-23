@@ -1,7 +1,6 @@
 package com.example.whatsappclone.ui.activity
 
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
@@ -27,14 +26,15 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.squareup.picasso.Picasso
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.kodein
 import org.kodein.di.generic.instance
 
-class MainActivity : AppCompatActivity(), KodeinAware {
-    var refUser: DatabaseReference? = null
-    var firebaseUser: FirebaseUser? = null
+@AndroidEntryPoint
+class MainActivity : AppCompatActivity() ,KodeinAware{
+
 
     override val kodein by kodein()
     private val factory: HomeViewModelFactory by instance()
@@ -46,8 +46,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         setContentView(R.layout.activity_main)
         viewModel = ViewModelProvider(this, factory).get(HomeViewModel::class.java)
 
-        firebaseUser = FirebaseAuth.getInstance().currentUser
-        refUser = FirebaseDatabase.getInstance().reference.child("Users").child(firebaseUser!!.uid)
 
         val toolbar: Toolbar = findViewById(R.id.toolbar_main)
         setSupportActionBar(toolbar)
@@ -88,7 +86,7 @@ class MainActivity : AppCompatActivity(), KodeinAware {
 
         return when (item.itemId) {
             R.id.action_logout -> {
-                viewModel.logout()
+              //  viewModel.logout()
                 startLoginActivity()
                 true
             }

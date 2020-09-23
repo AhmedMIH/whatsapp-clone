@@ -5,38 +5,40 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.example.whatsappclone.R
-import com.example.whatsappclone.data.model.Users
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.example.whatsappclone.ui.viewModel.MassageViewModel
+import com.example.whatsappclone.ui.viewModel.MassageViewModelFactory
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_visit_user_profile.*
+import org.kodein.di.KodeinAware
+import org.kodein.di.android.kodein
+import org.kodein.di.generic.instance
 
-class VisitUserProfileActivity : AppCompatActivity() {
+class VisitUserProfileActivity : AppCompatActivity(), KodeinAware {
+
+    override val kodein by kodein()
+    private val factory: MassageViewModelFactory by instance()
+    private lateinit var viewModel: MassageViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_visit_user_profile)
         val userVisitId = intent.getStringExtra("visit_id")
-        var user: Users? = null
-        val ref = FirebaseDatabase.getInstance().reference
-            .child("Users")
-            .child(userVisitId!!)
-        ref.addValueEventListener(object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-
-            }
-
-            override fun onDataChange(p0: DataSnapshot) {
-                if (p0.exists()) {
-                    user = p0.getValue(Users::class.java)
-                    username_visit_profile.text = user!!.username
-                    Picasso.get().load(user!!.profile).into(profile_visit_profile)
-                    Picasso.get().load(user!!.cover).into(cover_visit_profile)
-                }
-            }
-        })
+        viewModel = ViewModelProvider(this, factory)[MassageViewModel::class.java]
+        viewModel.receiverId = userVisitId
+        val user = viewModel.retrieveUserInformation().value
+        username_visit_profile.text = user?.username
+        if (user?.profile == "") {
+            Picasso.get().load(R.drawable.ic_profile).into(profile_visit_profile)
+        } else {
+            Picasso.get().load(user?.profile).into(profile_visit_profile)
+        }
+        if (user?.cover == "") {
+            Picasso.get().load(R.drawable.ic_profile).into(cover_visit_profile)
+        } else {
+            Picasso.get().load(user?.cover).into(cover_visit_profile)
+        }
         show_facebook_visit_profile.setOnClickListener {
             if (user!!.facebook != "") {
                 val uri = Uri.parse(user!!.facebook)
@@ -54,7 +56,11 @@ class VisitUserProfileActivity : AppCompatActivity() {
                 val intent = Intent(Intent.ACTION_VIEW, uri)
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "this user didn't set a instagram username", Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    this,
+                    "this user didn't set a instagram username",
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
         }
@@ -73,7 +79,5 @@ class VisitUserProfileActivity : AppCompatActivity() {
             intent.putExtra("visit_id", user!!.uid)
             startActivity(intent)
         }
-
-
     }
 }

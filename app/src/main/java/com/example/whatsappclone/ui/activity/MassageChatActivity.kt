@@ -17,8 +17,8 @@ import com.example.whatsappclone.adapter.ChatsAdapter
 import com.example.whatsappclone.data.model.Chat
 import com.example.whatsappclone.ui.AuthListener
 import com.example.whatsappclone.ui.ClickListener
-import com.example.whatsappclone.ui.viewModel.ChatViewModel
-import com.example.whatsappclone.ui.viewModel.ChatViewModelFactory
+import com.example.whatsappclone.ui.viewModel.MassageViewModel
+import com.example.whatsappclone.ui.viewModel.MassageViewModelFactory
 import com.example.whatsappclone.util.startVisitUserProfileActivity
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
@@ -32,7 +32,7 @@ import org.kodein.di.android.kodein
 import org.kodein.di.generic.instance
 
 class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
-    var userIdVisit: String? = ""
+    private var userIdVisit: String? = ""
     private var userVisitProfile: String? = ""
     private var chatsAdapter: ChatsAdapter? = null
     private var mChatList: List<Chat>? = null
@@ -41,8 +41,8 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
     private var notify = false
 
     override val kodein by kodein()
-    private val factory: ChatViewModelFactory by instance()
-    private lateinit var viewModel: ChatViewModel
+    private val factory: MassageViewModelFactory by instance()
+    private lateinit var viewModel: MassageViewModel
 
     private val listener = object : ClickListener {
         override fun deleteMassage(massage: Chat) {
@@ -55,11 +55,17 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_massage_chat)
 
-        viewModel = ViewModelProvider(this, factory)[ChatViewModel::class.java]
+        viewModel = ViewModelProvider(this, factory)[MassageViewModel::class.java]
         viewModel.authListener = this
 
         intent = intent
         userIdVisit = intent.getStringExtra("visit_id")
+
+        recyclerView = findViewById(R.id.recycler_view_massage_chat)
+        recyclerView.setHasFixedSize(true)
+        val linerLayoutManager = LinearLayoutManager(this)
+        linerLayoutManager.stackFromEnd = true
+        recyclerView.layoutManager = linerLayoutManager
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar_massage_chat)
         setSupportActionBar(toolbar)
@@ -75,11 +81,7 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
             startVisitUserProfileActivity(userIdVisit!!)
         }
 
-        recyclerView = findViewById(R.id.recycler_view_massage_chat)
-        recyclerView.setHasFixedSize(true)
-        val linerLayoutManager = LinearLayoutManager(this)
-        linerLayoutManager.stackFromEnd = true
-        recyclerView.layoutManager = linerLayoutManager
+
 
         viewModel.receiverId = userIdVisit
         viewModel.retrieveUserInformation().observe(this, Observer { user ->
@@ -109,7 +111,7 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
                 viewModel.massageString = massage
                 viewModel.url = ""
                 viewModel.sendMassage()
-                viewModel.sendNotification()
+                //viewModel.sendNotification()
                 notify = false
             }
             text_massage.setText("")

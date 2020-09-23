@@ -10,7 +10,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 
-class ChatViewModel(private val repository: UserRepository) : ViewModel() {
+class MassageViewModel(private val repository: UserRepository) : ViewModel() {
     var massage: Chat? = null
     var massageString: String? = null
     var receiverId: String? = null
@@ -62,16 +62,16 @@ class ChatViewModel(private val repository: UserRepository) : ViewModel() {
         disposables.add(disposable)
     }
 
-    fun sendNotification() {
-        val disposable =
-            repository.sendNotification(receiverId!!, senderId, senderUsername, massageString!!)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                }, {
-                })
-        disposables.add(disposable)
-    }
+//    fun sendNotification() {
+//        val disposable =
+//            repository.sendNotification(receiverId!!, senderId, senderUsername, massageString!!)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe({
+//                }, {
+//                })
+//        disposables.add(disposable)
+//    }
 
     override fun onCleared() {
         super.onCleared()

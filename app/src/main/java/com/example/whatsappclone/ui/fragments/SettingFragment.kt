@@ -153,9 +153,9 @@ class SettingFragment : Fragment() {
     }
 
     private fun updateDbChildren(type: String, url: String) {
-        val mapCoverImage = HashMap<String, Any>()
-        mapCoverImage[type] = url
-        userRef!!.updateChildren(mapCoverImage)
+        val mapImage = HashMap<String, Any>()
+        mapImage[type] = url
+        userRef!!.updateChildren(mapImage)
         coverChecker = ""
     }
 

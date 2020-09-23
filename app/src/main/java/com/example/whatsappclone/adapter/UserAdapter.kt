@@ -14,6 +14,7 @@ import com.example.whatsappclone.R
 import com.example.whatsappclone.ui.activity.VisitUserProfileActivity
 import com.example.whatsappclone.data.model.Chat
 import com.example.whatsappclone.data.model.Users
+import com.example.whatsappclone.util.startVisitUserProfileActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -89,9 +90,7 @@ class UserAdapter(val context: Context, val mUsers: List<Users>, val isChat: Boo
                         context.startActivity(intent)
                     }
                     if (which == 1) {
-                        val intent = Intent(context, VisitUserProfileActivity::class.java)
-                        intent.putExtra("visit_id", user.uid)
-                        context.startActivity(intent)
+                        context.startVisitUserProfileActivity(user.uid!!)
                     }
                 })
                 builder.show()

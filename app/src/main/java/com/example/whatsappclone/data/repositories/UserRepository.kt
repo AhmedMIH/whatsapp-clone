@@ -2,8 +2,10 @@ package com.example.whatsappclone.data.repositories
 
 import com.example.whatsappclone.data.firebase.FirebaseSource
 import com.example.whatsappclone.data.model.Chat
+import com.example.whatsappclone.data.model.ChatList
+import javax.inject.Inject
 
-class UserRepository(private val firebase: FirebaseSource) {
+class UserRepository @Inject constructor(private val firebase: FirebaseSource) {
     fun login(email: String, password: String) = firebase.login(email, password)
 
     fun register(email: String, password: String) = firebase.register(email, password)
@@ -31,10 +33,14 @@ class UserRepository(private val firebase: FirebaseSource) {
     fun seenMassage(receiverId: String, SenderId: String) =
         firebase.seenMassage(receiverId, SenderId)
 
-    fun sendNotification(
-        receiverId: String,
-        senderId: String,
-        username: String?,
-        massage: String
-    ) = firebase.sendNotification(receiverId, senderId, username, massage)
+//    fun sendNotification(
+//        receiverId: String,
+//        senderId: String,
+//        username: String?,
+//        massage: String
+//    ) = firebase.sendNotification(receiverId, senderId, username, massage)
+
+    fun retrieveChatListChildren(userId: String) = firebase.retrieveChatListChildren(userId)
+
+    fun retrieveUserChildren(chatList: List<ChatList>) = firebase.retrieveUserChildren(chatList)
 }

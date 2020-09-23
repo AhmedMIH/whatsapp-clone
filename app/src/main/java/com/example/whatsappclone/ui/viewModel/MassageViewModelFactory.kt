@@ -6,12 +6,12 @@ import com.example.whatsappclone.data.repositories.UserRepository
 
 
 @Suppress("UNCHECKED_CAST")
-class ChatViewModelFactory(
+class MassageViewModelFactory(
     private val repository: UserRepository
 ) : ViewModelProvider.NewInstanceFactory() {
 
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-        return ChatViewModel(repository) as T
+        return MassageViewModel(repository) as T
     }
 
 }
