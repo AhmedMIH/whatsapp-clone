@@ -3,6 +3,7 @@ package com.example.whatsappclone
 import android.app.Application
 import com.example.whatsappclone.data.firebase.FirebaseSource
 import com.example.whatsappclone.data.repositories.UserRepository
+import com.example.whatsappclone.ui.fragments.ApiService
 import com.example.whatsappclone.ui.viewModel.AuthViewModelFactory
 import com.example.whatsappclone.ui.viewModel.ChatViewModelFactory
 import com.example.whatsappclone.ui.viewModel.HomeViewModelFactory

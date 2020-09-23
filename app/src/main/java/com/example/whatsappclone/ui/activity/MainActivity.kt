@@ -69,7 +69,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             }).attach()
 
         viewModel.retrieveUserInfo().observe(this, Observer {
-            Log.d("user", it.toString())
             username.text = it!!.username
             if (it.profile == "") {
                 Picasso.get().load(R.drawable.ic_profile).into(profile_image)

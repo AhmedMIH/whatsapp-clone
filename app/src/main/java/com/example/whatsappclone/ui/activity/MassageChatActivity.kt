@@ -8,24 +8,28 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.whatsappclone.R
 import com.example.whatsappclone.adapter.ChatsAdapter
 import com.example.whatsappclone.data.model.Chat
-import com.example.whatsappclone.data.model.Users
 import com.example.whatsappclone.notifications.*
 import com.example.whatsappclone.ui.AuthListener
 import com.example.whatsappclone.ui.ClickListener
 import com.example.whatsappclone.ui.fragments.ApiService
 import com.example.whatsappclone.ui.viewModel.ChatViewModel
 import com.example.whatsappclone.ui.viewModel.ChatViewModelFactory
+import com.example.whatsappclone.util.startVisitUserProfileActivity
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.database.*
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.UploadTask
 import com.squareup.picasso.Picasso
@@ -39,20 +43,20 @@ import retrofit2.Response
 
 class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
     var userIdVisit: String? = ""
+    private var userVisitProfile: String? = ""
     var firebaseUser: FirebaseUser? = null
-    var chatsAdapter: ChatsAdapter? = null
-    var mChatList: List<Chat>? = null
-    lateinit var recyclerView: RecyclerView
-    var reference: DatabaseReference? = null
-    var notify = false
-    var apiService: ApiService? = null
+    private var chatsAdapter: ChatsAdapter? = null
+    private var mChatList: List<Chat>? = null
+    private lateinit var recyclerView: RecyclerView
 
+    private var notify = false
+    var apiService: ApiService? = null
 
     override val kodein by kodein()
     private val factory: ChatViewModelFactory by instance()
     private lateinit var viewModel: ChatViewModel
 
-    val listener = object : ClickListener {
+    private val listener = object : ClickListener {
         override fun deleteMassage(massage: Chat) {
             viewModel.massage = massage
             viewModel.deleteMassage()
@@ -65,7 +69,7 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
         apiService = Client.getClient("https://fcm.googleapis.com/")!!
             .create(ApiService::class.java)
 
-        viewModel = ViewModelProvider(this,factory)[ChatViewModel::class.java]
+        viewModel = ViewModelProvider(this, factory)[ChatViewModel::class.java]
         viewModel.authListener = this
 
         intent = intent
@@ -79,14 +83,10 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
             finish()
         }
         profile_image_massage_chat.setOnClickListener {
-            val intent = Intent(this, VisitUserProfileActivity::class.java)
-            intent.putExtra("visit_id", userIdVisit)
-            startActivity(intent)
+            startVisitUserProfileActivity(userIdVisit!!)
         }
         username_massage_chat.setOnClickListener {
-            val intent = Intent(this, VisitUserProfileActivity::class.java)
-            intent.putExtra("visit_id", userIdVisit)
-            startActivity(intent)
+            startVisitUserProfileActivity(userIdVisit!!)
         }
 
         firebaseUser = FirebaseAuth.getInstance().currentUser
@@ -97,28 +97,37 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
         linerLayoutManager.stackFromEnd = true
         recyclerView.layoutManager = linerLayoutManager
 
-        reference =
-            FirebaseDatabase.getInstance().reference.child("Users").child(userIdVisit!!)
-        reference!!.addValueEventListener(object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-            }
-
-            override fun onDataChange(p0: DataSnapshot) {
-                val user: Users? = p0.getValue(Users::class.java)
-                username_massage_chat.text = user!!.username
+        viewModel.receiverId = userIdVisit
+        viewModel.retrieveUserInformation().observe(this, Observer { user ->
+            username_massage_chat.text = user!!.username
+            viewModel.receiverUserName = user.username
+            userVisitProfile = user.profile
+            if (user.profile == "") {
+                Picasso.get().load(R.drawable.ic_profile).into(profile_image_massage_chat)
+            } else
                 Picasso.get().load(user.profile).into(profile_image_massage_chat)
-                retrieveMassages(firebaseUser!!.uid, userIdVisit, user.profile)
-            }
+            viewModel.retrieveMassage().observe(this, Observer {
+                mChatList = it
+                chatsAdapter = ChatsAdapter(
+                    this@MassageChatActivity,
+                    mChatList as ArrayList<Chat>, userVisitProfile!!,
+                    listener
+                )
+                recyclerView.adapter = chatsAdapter
+            })
 
         })
-
         send_massage_btn.setOnClickListener {
             notify = true
             val massage = text_massage.text.toString()
             if (massage == "") {
                 Toast.makeText(this, "please write a massage first  ", Toast.LENGTH_LONG).show()
             } else {
-                sendMassageToUser(firebaseUser!!.uid, userIdVisit, massage)
+                viewModel.massageString = massage
+                viewModel.url = ""
+                viewModel.sendMassage()
+                sendNotification(userIdVisit!!, viewModel.receiverUserName, massage)
+                notify = false
             }
             text_massage.setText("")
         }
@@ -129,65 +138,9 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
             intent.action = Intent.ACTION_GET_CONTENT
             intent.type = "image/*"
             startActivityForResult(Intent.createChooser(intent, "Pick Image"), 483)
-
         }
 
-        seenMassage(userIdVisit!!)
-    }
-
-
-    private fun sendMassageToUser(senderId: String, receiverId: String?, massage: String) {
-        val reference = FirebaseDatabase.getInstance().reference
-        val massageKey = reference.push().key
-        val massageHashMap = HashMap<String, Any?>()
-        massageHashMap["sender"] = senderId
-        massageHashMap["receiver"] = receiverId
-        massageHashMap["massage"] = massage
-        massageHashMap["isSeen"] = false
-        massageHashMap["url"] = ""
-        massageHashMap["massageID"] = massageKey
-        reference.child("Chats").child(massageKey!!).setValue(massageHashMap)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val chatListReference =
-                        FirebaseDatabase.getInstance().reference.child("ChatList")
-                            .child(firebaseUser!!.uid)
-                            .child(receiverId!!)
-                    chatListReference.addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onCancelled(error: DatabaseError) {
-
-                        }
-
-                        override fun onDataChange(p0: DataSnapshot) {
-                            if (p0.exists()) {
-                                chatListReference.child("id").setValue(userIdVisit)
-                            }
-                            val chatListReceiverRef =
-                                FirebaseDatabase.getInstance().reference.child("ChatList")
-                                    .child(receiverId)
-                                    .child(firebaseUser!!.uid)
-                            chatListReceiverRef.child("id").setValue(firebaseUser!!.uid)
-                        }
-                    })
-
-                }
-            }
-        val ref = FirebaseDatabase.getInstance().reference
-            .child("Users").child(firebaseUser!!.uid)
-        ref.addValueEventListener(object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-
-            }
-
-            override fun onDataChange(p0: DataSnapshot) {
-                val user = p0.getValue(Users::class.java)
-                if (notify) {
-                    sendNotification(receiverId!!, user!!.username, massage)
-                }
-                notify = false
-            }
-
-        })
+        viewModel.seenMassage()
     }
 
     private fun sendNotification(receiverId: String, username: String?, massage: String) {
@@ -265,114 +218,24 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
                 if (task.isSuccessful) {
                     val downloadUrl = task.result
                     val url = downloadUrl.toString()
-
-                    val massageHashMap = HashMap<String, Any?>()
-                    massageHashMap["sender"] = firebaseUser!!.uid
-                    massageHashMap["receiver"] = userIdVisit
-                    massageHashMap["massage"] = "sent you an image"
-                    massageHashMap["isSeen"] = false
-                    massageHashMap["url"] = url
-                    massageHashMap["massageID"] = massageId
-
-                    ref.child("Chats").child(massageId!!).setValue(massageHashMap)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                val reference = FirebaseDatabase.getInstance().reference
-                                    .child("Users").child(firebaseUser!!.uid)
-                                reference.addValueEventListener(object : ValueEventListener {
-                                    override fun onCancelled(error: DatabaseError) {
-
-                                    }
-
-                                    override fun onDataChange(p0: DataSnapshot) {
-                                        val user = p0.getValue(Users::class.java)
-                                        if (notify) {
-                                            sendNotification(
-                                                userIdVisit!!,
-                                                user!!.username,
-                                                "sent you an image"
-                                            )
-                                        }
-                                        notify = false
-                                    }
-
-                                })
-                            }
-                        }
+                    viewModel.url = url
+                    viewModel.massageString = "sent you an image"
+                    viewModel.sendMassage()
                     loadingBar.dismiss()
                 }
             }
         }
     }
 
-    private fun retrieveMassages(senderId: String, receiverId: String?, receiverImageUrl: String?) {
-        mChatList = ArrayList()
-        val reference = FirebaseDatabase.getInstance().reference.child("Chats")
-        reference.addValueEventListener(object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-
-            }
-
-            override fun onDataChange(p0: DataSnapshot) {
-                (mChatList as ArrayList<Chat>).clear()
-                for (snapshot in p0.children) {
-                    val chat = snapshot.getValue(Chat::class.java)
-                    if ((chat!!.receiver == senderId && chat.sender == receiverId)
-                        || (chat.receiver == receiverId && chat.sender == senderId)
-                    ) {
-                        (mChatList as ArrayList<Chat>).add(chat)
-                    }
-                    chatsAdapter = ChatsAdapter(
-                        this@MassageChatActivity,
-                        mChatList as ArrayList<Chat>, receiverImageUrl!!,
-                        listener
-                    )
-                    recyclerView.adapter = chatsAdapter
-                }
-            }
-
-        })
-    }
-
-
-    private var seenListener: ValueEventListener? = null
-    private fun seenMassage(userId: String) {
-        val ref = FirebaseDatabase.getInstance().reference.child("Chats")
-
-        seenListener = ref.addValueEventListener(object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-
-            }
-
-            override fun onDataChange(p0: DataSnapshot) {
-                for (snapshot in p0.children) {
-                    val chat = snapshot.getValue(Chat::class.java)
-                    if (chat!!.receiver == firebaseUser!!.uid && chat.sender.equals(userId)) {
-                        val hashMap = HashMap<String, Any>()
-                        hashMap["isSeen"] = true
-                        snapshot.ref.updateChildren(hashMap)
-
-                    }
-                }
-            }
-
-        })
-    }
-
-    override fun onPause() {
-        super.onPause()
-        reference!!.removeEventListener(seenListener!!)
-    }
-
     override fun onStarted() {
-        Toast.makeText(this,"Loading",Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Loading", Toast.LENGTH_SHORT).show()
     }
 
     override fun onSuccess() {
-        Toast.makeText(this,"delete massage successfully",Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "delete massage successfully", Toast.LENGTH_SHORT).show()
     }
 
     override fun onFailure(message: String) {
-        Toast.makeText(this,"error $message",Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "error $message", Toast.LENGTH_SHORT).show()
     }
 }

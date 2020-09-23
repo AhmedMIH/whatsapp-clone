@@ -1,10 +1,7 @@
 package com.example.whatsappclone.data.repositories
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.example.whatsappclone.data.firebase.FirebaseSource
 import com.example.whatsappclone.data.model.Chat
-import com.example.whatsappclone.data.model.Users
 
 class UserRepository(private val firebase: FirebaseSource) {
     fun login(email: String, password: String) = firebase.login(email, password)
@@ -15,11 +12,20 @@ class UserRepository(private val firebase: FirebaseSource) {
 
     fun logout() = firebase.logout()
 
-    fun createUserInDb(username:String) = firebase.createUserInDb(username)
+    fun createUserInDb(username: String) = firebase.createUserInDb(username)
 
-    fun retrieveUserInformation() = firebase.retrieveUserInformation()
+    fun retrieveUserInformation(userId: String) = firebase.retrieveUserInformation(userId)
 
-    fun updateStatus(state:String) = firebase.updateStatus(state)
+    fun updateStatus(state: String) = firebase.updateStatus(state)
 
-    fun deleteMassage(massage:Chat) = firebase.deleteMassage(massage)
+    fun deleteMassage(massage: Chat) = firebase.deleteMassage(massage)
+
+    fun sendMassage(senderId: String, receiverId: String, massage: String, url: String) =
+        firebase.sendMassage(senderId, receiverId, massage, url)
+
+    fun retrieveMassage(senderId: String, receiverId: String) =
+        firebase.retrieveMassage(senderId, receiverId)
+
+    fun seenMassage(receiverId: String, SenderId: String) =
+        firebase.seenMassage(receiverId, SenderId)
 }

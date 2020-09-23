@@ -19,7 +19,7 @@ class HomeViewModel(
 
 
     fun retrieveUserInfo(): MutableLiveData<Users> {
-        val userInfoViewModel = repository.retrieveUserInformation()
+        val userInfoViewModel = repository.retrieveUserInformation(user!!.uid)
         return userInfoViewModel
     }
 
