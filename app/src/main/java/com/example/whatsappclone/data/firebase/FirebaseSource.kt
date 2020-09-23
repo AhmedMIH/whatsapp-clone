@@ -1,6 +1,5 @@
 package com.example.whatsappclone.data.firebase
 
-import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import com.example.whatsappclone.R
 import com.example.whatsappclone.data.model.Chat
@@ -9,7 +8,8 @@ import com.example.whatsappclone.notifications.Data
 import com.example.whatsappclone.notifications.MyResponse
 import com.example.whatsappclone.notifications.Sender
 import com.example.whatsappclone.notifications.Token
-import com.example.whatsappclone.ui.fragments.ApiService
+import com.example.whatsappclone.notifications.network.ApiService
+import com.example.whatsappclone.notifications.network.Client
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import io.reactivex.Completable
@@ -20,7 +20,7 @@ import java.util.*
 import kotlin.collections.HashMap
 import kotlin.collections.set
 
-class FirebaseSource {
+class FirebaseSource(private val apiClient: Client) {
     private val firebaseAuth: FirebaseAuth by lazy {
         FirebaseAuth.getInstance()
     }
@@ -56,6 +56,21 @@ class FirebaseSource {
     fun logout() = firebaseAuth.signOut()
 
     fun currentUser() = firebaseAuth.currentUser
+
+    fun getCurrentUserInfo(userId: String) :MutableLiveData<Users> {
+        val ref = firebaseDatabase.reference
+            .child("Users")
+            .child(userId)
+        ref.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val user = snapshot.getValue(Users::class.java)
+                userInfo.postValue(user)
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
+        })
+        return userInfo
+    }
 
     fun createUserInDb(userName: String) = Completable.create { emitter ->
         val ref: DatabaseReference = firebaseDatabase.reference
@@ -193,7 +208,7 @@ class FirebaseSource {
         return chatList
     }
 
-    fun seenMassage(receiverId:String,SenderId:String) = Completable.create {emitter ->
+    fun seenMassage(receiverId: String, SenderId: String) = Completable.create { emitter ->
         val ref = FirebaseDatabase.getInstance().reference.child("Chats")
         ref.addValueEventListener(object : ValueEventListener {
             override fun onCancelled(error: DatabaseError) {
@@ -211,6 +226,53 @@ class FirebaseSource {
                 }
             }
 
+        })
+    }
+
+    fun sendNotification(
+        receiverId: String,
+        senderId: String,
+        username: String?,
+        massage: String
+    ) = Completable.create { emitter ->
+        val apiService =
+            apiClient.getClient("https://fcm.googleapis.com/")?.create(ApiService::class.java)
+        val ref = FirebaseDatabase.getInstance().reference.child("Tokens")
+        val query = ref.orderByKey().equalTo(receiverId)
+        query.addValueEventListener(object : ValueEventListener {
+            override fun onCancelled(error: DatabaseError) {}
+            override fun onDataChange(p0: DataSnapshot) {
+                for (snapshot in p0.children) {
+                    val token = snapshot.getValue(Token::class.java)
+                    val data =
+                        Data(
+                            senderId,
+                            R.mipmap.ic_launcher,
+                            "$username : $massage",
+                            "new massage",
+                            receiverId
+                        )
+                    val sender = Sender(data, token!!.token.toString())
+                    apiService!!.sendNotification(sender)
+                        .enqueue(object : Callback<MyResponse> {
+                            override fun onFailure(call: Call<MyResponse>, t: Throwable) {
+                                emitter.onError(t)
+                            }
+
+                            override fun onResponse(
+                                call: Call<MyResponse>,
+                                response: Response<MyResponse>
+                            ) {
+
+                                if (!emitter.isDisposed) {
+                                    if (response.code() == 200)
+                                        emitter.onComplete()
+                                }
+                            }
+
+                        })
+                }
+            }
         })
     }
 }

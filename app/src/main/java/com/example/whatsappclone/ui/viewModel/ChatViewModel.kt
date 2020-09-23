@@ -12,12 +12,13 @@ import io.reactivex.schedulers.Schedulers
 
 class ChatViewModel(private val repository: UserRepository) : ViewModel() {
     var massage: Chat? = null
-    var massageString:String? =null
+    var massageString: String? = null
     var receiverId: String? = null
-    var receiverUserName:String?=null
-    var senderId: String = repository.currentUser()!!.uid
-    var url:String?=""
-    val disposables = CompositeDisposable()
+    var receiverUserName: String? = null
+    private var senderId: String = repository.currentUser()!!.uid
+    private var senderUsername = repository.getCurrentUserInfo(senderId).value!!.username
+    var url: String? = ""
+    private val disposables = CompositeDisposable()
     var authListener: AuthListener? = null
 
 
@@ -38,8 +39,8 @@ class ChatViewModel(private val repository: UserRepository) : ViewModel() {
         return repository.retrieveUserInformation(receiverId!!)
     }
 
-    fun sendMassage(){
-        val disposable = repository.sendMassage(senderId,receiverId!!,massageString!!,url!!)
+    fun sendMassage() {
+        val disposable = repository.sendMassage(senderId, receiverId!!, massageString!!, url!!)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
@@ -53,11 +54,22 @@ class ChatViewModel(private val repository: UserRepository) : ViewModel() {
         return repository.retrieveMassage(senderId, receiverId!!)
     }
 
-    fun seenMassage(){
-        val disposable = repository.seenMassage(receiverId!!,senderId)
+    fun seenMassage() {
+        val disposable = repository.seenMassage(receiverId!!, senderId)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe{}
+            .subscribe {}
+        disposables.add(disposable)
+    }
+
+    fun sendNotification() {
+        val disposable =
+            repository.sendNotification(receiverId!!, senderId, senderUsername, massageString!!)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                }, {
+                })
         disposables.add(disposable)
     }
 

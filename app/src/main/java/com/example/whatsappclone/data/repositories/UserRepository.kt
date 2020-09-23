@@ -10,6 +10,8 @@ class UserRepository(private val firebase: FirebaseSource) {
 
     fun currentUser() = firebase.currentUser()
 
+    fun getCurrentUserInfo(userId: String) = firebase.getCurrentUserInfo(userId)
+
     fun logout() = firebase.logout()
 
     fun createUserInDb(username: String) = firebase.createUserInDb(username)
@@ -28,4 +30,11 @@ class UserRepository(private val firebase: FirebaseSource) {
 
     fun seenMassage(receiverId: String, SenderId: String) =
         firebase.seenMassage(receiverId, SenderId)
+
+    fun sendNotification(
+        receiverId: String,
+        senderId: String,
+        username: String?,
+        massage: String
+    ) = firebase.sendNotification(receiverId, senderId, username, massage)
 }

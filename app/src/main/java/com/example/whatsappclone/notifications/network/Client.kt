@@ -1,4 +1,4 @@
-package com.example.whatsappclone.notifications
+package com.example.whatsappclone.notifications.network
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

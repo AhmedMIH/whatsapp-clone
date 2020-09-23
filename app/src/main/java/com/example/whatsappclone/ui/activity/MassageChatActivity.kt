@@ -15,21 +15,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.whatsappclone.R
 import com.example.whatsappclone.adapter.ChatsAdapter
 import com.example.whatsappclone.data.model.Chat
-import com.example.whatsappclone.notifications.*
 import com.example.whatsappclone.ui.AuthListener
 import com.example.whatsappclone.ui.ClickListener
-import com.example.whatsappclone.ui.fragments.ApiService
 import com.example.whatsappclone.ui.viewModel.ChatViewModel
 import com.example.whatsappclone.ui.viewModel.ChatViewModelFactory
 import com.example.whatsappclone.util.startVisitUserProfileActivity
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.UploadTask
 import com.squareup.picasso.Picasso
@@ -37,20 +30,15 @@ import kotlinx.android.synthetic.main.activity_massage_chat.*
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.kodein
 import org.kodein.di.generic.instance
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
     var userIdVisit: String? = ""
     private var userVisitProfile: String? = ""
-    var firebaseUser: FirebaseUser? = null
     private var chatsAdapter: ChatsAdapter? = null
     private var mChatList: List<Chat>? = null
     private lateinit var recyclerView: RecyclerView
 
     private var notify = false
-    var apiService: ApiService? = null
 
     override val kodein by kodein()
     private val factory: ChatViewModelFactory by instance()
@@ -66,8 +54,6 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_massage_chat)
-        apiService = Client.getClient("https://fcm.googleapis.com/")!!
-            .create(ApiService::class.java)
 
         viewModel = ViewModelProvider(this, factory)[ChatViewModel::class.java]
         viewModel.authListener = this
@@ -88,8 +74,6 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
         username_massage_chat.setOnClickListener {
             startVisitUserProfileActivity(userIdVisit!!)
         }
-
-        firebaseUser = FirebaseAuth.getInstance().currentUser
 
         recyclerView = findViewById(R.id.recycler_view_massage_chat)
         recyclerView.setHasFixedSize(true)
@@ -115,7 +99,6 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
                 )
                 recyclerView.adapter = chatsAdapter
             })
-
         })
         send_massage_btn.setOnClickListener {
             notify = true
@@ -126,7 +109,7 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
                 viewModel.massageString = massage
                 viewModel.url = ""
                 viewModel.sendMassage()
-                sendNotification(userIdVisit!!, viewModel.receiverUserName, massage)
+                viewModel.sendNotification()
                 notify = false
             }
             text_massage.setText("")
@@ -139,56 +122,7 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
             intent.type = "image/*"
             startActivityForResult(Intent.createChooser(intent, "Pick Image"), 483)
         }
-
         viewModel.seenMassage()
-    }
-
-    private fun sendNotification(receiverId: String, username: String?, massage: String) {
-        val ref = FirebaseDatabase.getInstance().reference.child("Tokens")
-        val query = ref.orderByKey().equalTo(receiverId)
-        query.addValueEventListener(object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-
-            }
-
-            override fun onDataChange(p0: DataSnapshot) {
-                for (snapshot in p0.children) {
-                    val token = snapshot.getValue(Token::class.java)
-                    val data =
-                        Data(
-                            firebaseUser!!.uid,
-                            R.mipmap.ic_launcher,
-                            "$username : $massage",
-                            "new massage",
-                            userIdVisit
-                        )
-                    val sender = Sender(data, token!!.token.toString())
-                    apiService!!.sendNotification(sender)
-                        .enqueue(object : Callback<MyResponse> {
-                            override fun onFailure(call: Call<MyResponse>, t: Throwable) {
-
-                            }
-
-                            override fun onResponse(
-                                call: Call<MyResponse>,
-                                response: Response<MyResponse>
-                            ) {
-                                if (response.code() == 200) {
-                                    if (response.body()!!.success != 1) {
-                                        Toast.makeText(
-                                            this@MassageChatActivity,
-                                            "failed nothing happen.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                                }
-                            }
-
-                        })
-                }
-            }
-
-        })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
