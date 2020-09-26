@@ -11,8 +11,6 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
-import android.widget.Toast
-import androidx.core.os.persistableBundleOf
 import androidx.recyclerview.widget.RecyclerView
 import com.example.whatsappclone.R
 import com.example.whatsappclone.data.model.Chat
@@ -20,7 +18,6 @@ import com.example.whatsappclone.ui.ClickListener
 import com.example.whatsappclone.ui.activity.ViewFullImageActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.database.FirebaseDatabase
 import com.squareup.picasso.Picasso
 
 class ChatsAdapter(
@@ -142,7 +139,7 @@ class ChatsAdapter(
                         builder.setTitle("what do you want ?")
                         builder.setItems(option, DialogInterface.OnClickListener { dialog, which ->
                             if (which == 0) {
-                                Log.d("delete","delete + ${mChatList[position]}")
+                                Log.d("delete", "delete + ${mChatList[position]}")
                                 listener.deleteMassage(mChatList[position])
                             }
                             if (which == 1) {
@@ -179,24 +176,6 @@ class ChatsAdapter(
                 text_seen!!.visibility = View.GONE
             }
         }
-
-//        private fun deleteMassage(position: Int) {
-//            val ref = FirebaseDatabase.getInstance().reference.child("Chats")
-//                .child(mChatList.get(position).massageID!!)
-//                .removeValue()
-//                .addOnCompleteListener { task ->
-//                    if (task.isSuccessful) {
-//                        Toast.makeText(itemView.context, "Deleted", Toast.LENGTH_SHORT).show()
-//                    } else {
-//                        Toast.makeText(
-//                            itemView.context,
-//                            "Failed, Not Deleted",
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-//                    }
-//                }
-//
-//        }
     }
 
 }

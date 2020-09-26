@@ -97,12 +97,15 @@ class MainActivity : AppCompatActivity() ,KodeinAware{
     override fun onResume() {
         super.onResume()
         viewModel.state = "online"
+        viewModel.childrenName = "status"
+
         viewModel.updateState()
     }
 
     override fun onPause() {
         super.onPause()
         viewModel.state = "offline"
+        viewModel.childrenName = "status"
         viewModel.updateState()
     }
 

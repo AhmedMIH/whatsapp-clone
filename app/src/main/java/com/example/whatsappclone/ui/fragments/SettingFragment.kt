@@ -12,29 +12,35 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import com.example.whatsappclone.R
 import com.example.whatsappclone.data.model.Users
+import com.example.whatsappclone.ui.viewModel.SettingFragmentViewModel
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.database.*
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
 import com.squareup.picasso.Picasso
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_setting.*
 import kotlinx.android.synthetic.main.fragment_setting.view.*
 
+@AndroidEntryPoint
 class SettingFragment : Fragment() {
 
-    private var userRef: DatabaseReference? = null
-    private var firebaseUser: FirebaseUser? = null
     private val reqCode = 483
     private var imageUri: Uri? = null
     private var storageRef: StorageReference? = null
     private var coverChecker: String? = ""
     private var socialChecker: String? = ""
+
+    private val viewModel: SettingFragmentViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,11 +49,11 @@ class SettingFragment : Fragment() {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_setting, container, false)
 
-        firebaseUser = FirebaseAuth.getInstance().currentUser
-        userRef = FirebaseDatabase.getInstance().reference.child("Users").child(firebaseUser!!.uid)
         storageRef = FirebaseStorage.getInstance().reference.child("User Images")
 
-        loadImageFromDb()
+        viewModel.retrieveUserInfo().observe(viewLifecycleOwner, Observer {
+            showUserInformation(it)
+        })
 
         view.profile_image_setting.setOnClickListener {
             pickImage()
@@ -76,33 +82,19 @@ class SettingFragment : Fragment() {
         return view
     }
 
-    private fun loadImageFromDb() {
-
-        userRef!!.addValueEventListener(object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {}
-
-            override fun onDataChange(p0: DataSnapshot) {
-                if (p0.exists()) {
-                    val user: Users? = p0.getValue(Users::class.java)
-                    showUserInformation(user?.profile, user?.cover, user?.username)
-                }
-            }
-        })
-    }
-
-    private fun showUserInformation(profile: String?, cover: String?, username: String?) {
+    private fun showUserInformation(user: Users) {
         if (context != null) {
-            if (profile == "") {
+            if (user.profile == "") {
                 Picasso.get().load(R.drawable.ic_profile).into(profile_image_setting)
             } else {
-                Picasso.get().load(profile).into(profile_image_setting)
+                Picasso.get().load(user.profile).into(profile_image_setting)
             }
-            if (cover == "") {
+            if (user.cover == "") {
                 Picasso.get().load(R.drawable.ic_profile).into(cover_image_setting)
             } else {
-                Picasso.get().load(cover).into(cover_image_setting)
+                Picasso.get().load(user.cover).into(cover_image_setting)
             }
-            username_setting.text = username
+            username_setting.text = user.username
         }
 
     }
@@ -142,21 +134,18 @@ class SettingFragment : Fragment() {
                     val downloadUrl = task.result
                     val url = downloadUrl.toString()
                     if (coverChecker == "cover") {
-                        updateDbChildren("cover", url)
+                        viewModel.child = url
+                        viewModel.childrenName = "cover"
+                        viewModel.updateChildren()
                     } else {
-                        updateDbChildren("profile", url)
+                        viewModel.child = url
+                        viewModel.childrenName = "profile"
+                        viewModel.updateChildren()
                     }
                     progressBar.dismiss()
                 }
             }
         }
-    }
-
-    private fun updateDbChildren(type: String, url: String) {
-        val mapImage = HashMap<String, Any>()
-        mapImage[type] = url
-        userRef!!.updateChildren(mapImage)
-        coverChecker = ""
     }
 
     private fun setSocialLinks() {
@@ -191,24 +180,24 @@ class SettingFragment : Fragment() {
     }
 
     private fun saveSocialLinkToDb(str: String) {
-        val mapSocialUrl = HashMap<String, Any>()
-
         when (socialChecker) {
             "facebook" -> {
-                mapSocialUrl["facebook"] = "https://m.facebook.com/$str"
+                viewModel.child = "https://m.facebook.com/$str"
+                viewModel.childrenName = "facebook"
+                viewModel.updateChildren()
             }
             "instagram" -> {
-                mapSocialUrl["instagram"] = "https://m.instagram.com/$str"
+                viewModel.child = "https://m.instagram.com/$str"
+                viewModel.childrenName = "instagram"
+                viewModel.updateChildren()
+
             }
             "website" -> {
-                mapSocialUrl["website"] = "https://$str"
-            }
-        }
-        userRef!!.updateChildren(mapSocialUrl).addOnCompleteListener {
-            if (it.isSuccessful) {
-                Toast.makeText(context, "updated successfully", Toast.LENGTH_SHORT).show()
+                viewModel.child = "https://$str"
+                viewModel.childrenName = "website"
+                viewModel.updateChildren()
+
             }
         }
     }
-
 }

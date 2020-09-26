@@ -1,17 +1,17 @@
 package com.example.whatsappclone.di
 
+import com.example.whatsappclone.data.firebase.FirebaseRealTimeDb
+import com.example.whatsappclone.data.firebase.FirebaseSetting
 import com.example.whatsappclone.data.firebase.FirebaseSource
-import com.example.whatsappclone.data.repositories.UserRepository
-import com.example.whatsappclone.notifications.network.ApiService
-import com.example.whatsappclone.notifications.network.ApiServiceImpl
-import com.example.whatsappclone.notifications.network.Client
-import com.google.android.gms.common.api.Api
+import com.example.whatsappclone.data.firebase.FirebaseSourceAuth
+import com.example.whatsappclone.data.repositories.AuthRepository
+import com.example.whatsappclone.data.repositories.BaseRepository
+import com.example.whatsappclone.data.repositories.ChatsListRepository
+import com.example.whatsappclone.data.repositories.SettingRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ApplicationComponent
-import retrofit2.Retrofit
-import retrofit2.create
 import javax.inject.Singleton
 
 @Module
@@ -24,6 +24,27 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideUserRepository(firebaseSource: FirebaseSource) = UserRepository(firebaseSource)
+    fun provideFirebaseRealTimeDb() = FirebaseRealTimeDb()
+
+    @Provides
+    @Singleton
+    fun provideFirebaseSetting() = FirebaseSetting()
+
+
+
+    @Provides
+    @Singleton
+    fun provideBaseRepository(firebaseSource: FirebaseSource) = BaseRepository(firebaseSource)
+
+
+    @Provides
+    @Singleton
+    fun provideChatsListRepository(firebaseSource: FirebaseRealTimeDb) = ChatsListRepository(firebaseSource)
+
+
+    @Provides
+    @Singleton
+    fun provideSettingRepository(firebaseSource: FirebaseSetting) = SettingRepository(firebaseSource)
+
 
 }

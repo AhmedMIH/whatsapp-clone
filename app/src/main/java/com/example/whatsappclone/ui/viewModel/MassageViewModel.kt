@@ -4,23 +4,27 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.whatsappclone.data.model.Chat
 import com.example.whatsappclone.data.model.Users
-import com.example.whatsappclone.data.repositories.UserRepository
+import com.example.whatsappclone.data.repositories.MassageRepository
 import com.example.whatsappclone.ui.AuthListener
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 
-class MassageViewModel(private val repository: UserRepository) : ViewModel() {
+
+class MassageViewModel(private val repository: MassageRepository) : ViewModel() {
     var massage: Chat? = null
-    var massageString: String? = null
-    var receiverId: String? = null
-    var receiverUserName: String? = null
-    private var senderId: String = repository.currentUser()!!.uid
-    private var senderUsername = repository.getCurrentUserInfo(senderId).value!!.username
+    var massageString: String? = ""
+    var receiverId: String? = ""
+    var receiverUserName: String? = ""
+    private var senderId: String = ""
+    private var senderUsername = ""
     var url: String? = ""
     private val disposables = CompositeDisposable()
     var authListener: AuthListener? = null
 
+    init {
+        senderId = repository.currentUser()!!.uid
+    }
 
     fun deleteMassage() {
         authListener?.onStarted()
@@ -28,7 +32,7 @@ class MassageViewModel(private val repository: UserRepository) : ViewModel() {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                authListener?.onSuccess()
+                //authListener?.onSuccess()
             }, {
                 authListener?.onFailure(it.message!!)
             })
@@ -36,7 +40,19 @@ class MassageViewModel(private val repository: UserRepository) : ViewModel() {
     }
 
     fun retrieveUserInformation(): MutableLiveData<Users> {
-        return repository.retrieveUserInformation(receiverId!!)
+        return repository.getReceiverUserInfo(receiverId!!)
+    }
+
+    fun retrieveSenderUsername() {
+        val disposable = repository.getCurrentUserInfo(senderId)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                senderUsername = it.username!!
+            }
+        disposables.add(disposable)
+//        val user = repository.getCurrentUserInfo(senderId)
+//        senderUsername = user.value!!.username!!
     }
 
     fun sendMassage() {
@@ -44,6 +60,7 @@ class MassageViewModel(private val repository: UserRepository) : ViewModel() {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
+                authListener?.onSuccess()
             }, {
                 authListener?.onFailure(it.message!!)
             })
@@ -62,16 +79,16 @@ class MassageViewModel(private val repository: UserRepository) : ViewModel() {
         disposables.add(disposable)
     }
 
-//    fun sendNotification() {
-//        val disposable =
-//            repository.sendNotification(receiverId!!, senderId, senderUsername, massageString!!)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe({
-//                }, {
-//                })
-//        disposables.add(disposable)
-//    }
+    fun sendNotification() {
+        val disposable =
+            repository.sendNotification(receiverId!!, senderId, senderUsername, massageString!!)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                }, {
+                })
+        disposables.add(disposable)
+    }
 
     override fun onCleared() {
         super.onCleared()

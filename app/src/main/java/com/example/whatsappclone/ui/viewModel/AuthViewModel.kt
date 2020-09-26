@@ -4,7 +4,7 @@ import android.content.Intent
 import android.util.Log
 import android.view.View
 import androidx.lifecycle.ViewModel
-import com.example.whatsappclone.data.repositories.UserRepository
+import com.example.whatsappclone.data.repositories.AuthRepository
 import com.example.whatsappclone.ui.AuthListener
 import com.example.whatsappclone.ui.activity.LoginActivity
 import com.example.whatsappclone.ui.activity.RegisterActivity
@@ -12,7 +12,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 
-class AuthViewModel(private val repository: UserRepository) : ViewModel() {
+class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
     var email: String? = null
     var password: String? = null
     var username:String? =null

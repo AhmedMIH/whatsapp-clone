@@ -1,9 +1,12 @@
 package com.example.whatsappclone.ui.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
@@ -12,62 +15,59 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.whatsappclone.R
 import com.example.whatsappclone.adapter.UserAdapter
 import com.example.whatsappclone.data.model.Users
-import com.example.whatsappclone.notifications.Token
-import com.example.whatsappclone.ui.viewModel.chatFragmentViewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.iid.FirebaseInstanceId
+import com.example.whatsappclone.ui.AuthListener
+import com.example.whatsappclone.ui.viewModel.FragmentViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.fragment_chat.*
 
 @AndroidEntryPoint
-class ChatFragment : Fragment() {
-//    var userAdapter: UserAdapter? = null
+class ChatFragment : Fragment(R.layout.fragment_chat), AuthListener {
 
-    private var firebaseUser: FirebaseUser? = null
+    private val viewModel: FragmentViewModel by viewModels()
+    var mUserList = ArrayList<Users>()
+    lateinit var progress : ProgressBar
 
-    private val viewModel: chatFragmentViewModel by viewModels()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        progress = requireView().findViewById(R.id.progressBar)
 
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        val view = inflater.inflate(R.layout.fragment_chat, container, false)
-
-
+        viewModel.authListener =this
 
         viewModel.retrieveChatListChildren().observe(viewLifecycleOwner, Observer { chatList ->
-            viewModel.retrieveUsersChildren(chatList)
-                .observe(viewLifecycleOwner, Observer { usersList ->
-                    showRecyclerView(usersList)
-                })
+            viewModel.retrieveUsersChildren().observe(viewLifecycleOwner, Observer { users ->
+                mUserList.clear()
+                users.forEach { user ->
+                    chatList.forEach { chat ->
+                        if (user.uid == chat.id) {
+                            mUserList.add(user)
+
+                        }
+                    }
+                }
+                showRecyclerView(mUserList)
+            })
         })
-        //   updateToken()
-
-        return view
     }
 
-    private fun updateToken() {
-        val token = FirebaseInstanceId.getInstance().token
-        val ref = FirebaseDatabase.getInstance().reference.child("Tokens")
-        val token1 = Token(token)
-        ref.child(firebaseUser!!.uid).setValue(token1)
-    }
-
-    fun showRecyclerView(usersList: List<Users>) {
+    private fun showRecyclerView(usersList: List<Users>) {
         val recyclerViewChatList: RecyclerView =
             requireView().findViewById(R.id.recycler_view_chatList)
         recyclerViewChatList.setHasFixedSize(true)
         recyclerViewChatList.layoutManager = LinearLayoutManager(context)
-        firebaseUser = FirebaseAuth.getInstance().currentUser
         val userAdapter = UserAdapter(requireContext(), (usersList as ArrayList<Users>), true)
         recyclerViewChatList.adapter = userAdapter
     }
 
-    override fun onResume() {
-        super.onResume()
-        //retrieveChatList()
+    override fun onStarted() {
+        progress.visibility = View.VISIBLE
     }
+
+    override fun onSuccess() {
+        progress.visibility = View.GONE
+    }
+
+    override fun onFailure(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
 }

@@ -5,6 +5,7 @@ import android.app.ProgressDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -61,6 +62,9 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
         intent = intent
         userIdVisit = intent.getStringExtra("visit_id")
 
+        viewModel.receiverId = userIdVisit
+
+
         recyclerView = findViewById(R.id.recycler_view_massage_chat)
         recyclerView.setHasFixedSize(true)
         val linerLayoutManager = LinearLayoutManager(this)
@@ -78,13 +82,12 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
             startVisitUserProfileActivity(userIdVisit!!)
         }
         username_massage_chat.setOnClickListener {
-            startVisitUserProfileActivity(userIdVisit!!)
+            startVisitUserProfileActivity(viewModel.receiverId!!)
         }
 
 
-
-        viewModel.receiverId = userIdVisit
         viewModel.retrieveUserInformation().observe(this, Observer { user ->
+
             username_massage_chat.text = user!!.username
             viewModel.receiverUserName = user.username
             userVisitProfile = user.profile
@@ -111,7 +114,8 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
                 viewModel.massageString = massage
                 viewModel.url = ""
                 viewModel.sendMassage()
-                //viewModel.sendNotification()
+                viewModel.retrieveSenderUsername()
+                viewModel.sendNotification()
                 notify = false
             }
             text_massage.setText("")
@@ -167,9 +171,7 @@ class MassageChatActivity : AppCompatActivity(), AuthListener, KodeinAware {
         Toast.makeText(this, "Loading", Toast.LENGTH_SHORT).show()
     }
 
-    override fun onSuccess() {
-        Toast.makeText(this, "delete massage successfully", Toast.LENGTH_SHORT).show()
-    }
+    override fun onSuccess() {}
 
     override fun onFailure(message: String) {
         Toast.makeText(this, "error $message", Toast.LENGTH_SHORT).show()
